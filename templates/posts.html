@@ -1,0 +1,20 @@
+{% extends 'main.html' %}
+
+{% block posts %}
+    <div style="display: flex; justify-content: space-between">
+        {% for post in posts %}
+        <div style="text-align: center; height: 150px; width: 300px;">
+            <img src="media/{{ post.image }}" alt="" style="width: 300px">
+            {% if post.stars > 2 %}
+                <h3 style="color: green">{{ post.title }}</h3>
+            {% else %}
+                <h3 style="color: red">{{ post.title }}</h3>
+            {% endif %}
+            <h5>{{ post.description }}</h5>
+            <p>Stars: {{ post.stars }}</p>
+            <p>Type: {{ post.type }}</p>
+            <a href="/posts/{{ post.id }}/">More</a>
+        </div>
+    {% endfor %}
+    </div>
+{% endblock %}
