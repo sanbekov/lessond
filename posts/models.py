@@ -6,6 +6,7 @@ POST_TYPE_CHOICES = (
     (1, 'Animals'),
     (2, 'Cars'),
     (3, 'Nature'),
+    (4, 'Comment')
 )
 
 

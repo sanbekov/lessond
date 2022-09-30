@@ -25,15 +25,18 @@ class Postform(forms.Form):
     )
 
 
+
 class Commentform(forms.Form):
     author = forms.CharField(
         label="Автор",
         max_length=100,
-        min_length=10
+        min_length=3
     )
 
     text = forms.CharField(
+        widget=forms.Textarea(),
         label="Text",
         max_length=300,
         min_length=5
     )
+
