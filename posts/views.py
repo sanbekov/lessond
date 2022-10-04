@@ -1,7 +1,15 @@
+from django.contrib.auth.models import User
 from django.shortcuts import render, redirect
 from django.http import HttpResponse
+from django.urls import reverse_lazy
+
 from posts.forms import Postform, Commentform
 from posts.models import Post, Comment
+from users.forms import RegisterForm, LoginForm
+
+
+def get_user_from_request(request):
+    return request.user if not request.user.is_anonymous else None
 
 
 def main(request):
@@ -9,7 +17,8 @@ def main(request):
         posts = Post.objects.all()
 
         data = {
-            'posts': posts
+            'posts': posts,
+            'user': get_user_from_request(request)
         }
 
         return render(request, 'posts.html', context=data)
@@ -21,6 +30,7 @@ def post_detail(request, id):
         comments = Comment.objects.filter(post=post)
 
         data = {
+            'user': get_user_from_request(request),
             'comment_form': Commentform,
             'post': post,
             'comments': comments
@@ -47,9 +57,12 @@ def post_detail(request, id):
 
 def creat_post(request):
     if request.method == 'GET':
-        return render(request, 'create_post.html', context={
-            'post_form': Postform
-        })
+        if get_user_from_request(request):
+            return render(request, 'create_post.html', context={
+                'post_form': Postform
+            })
+        else:
+            return redirect('/')
 
     if request.method == "POST":
         form = Postform(request.POST)
@@ -87,6 +100,21 @@ def creat_comment(request):
             })
 
 
+def edit_post(request, id):
+    if request.method == 'GET':
+        return render(request, 'create_post.html', context={
+            'post_form': Postform
+        })
+    if request.method == 'POST':
+        form = Postform(request.POST)
+        if form.is_valid():
+            post = Post.objects.get(id=id)
+            post.title = form.cleaned_data.get('title')
+            post.description = form.cleaned_data.get('description')
+            post.stars = form.cleaned_data.get('stars')
+            post.type = form.cleaned_data.get('type')
+            post.save()
+            return redirect('/')
 
 
 
