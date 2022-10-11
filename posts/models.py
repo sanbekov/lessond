@@ -13,7 +13,7 @@ POST_TYPE_CHOICES = (
 
 class Post(models.Model):
     title = models.CharField(max_length=100)
-    desciption = models.TextField()
+    desciption = models.TextField(null=True, blank=True)
     date = models.DateField(auto_now_add=True, blank=True, null=True)
     stars = models.  IntegerField(null=True)
     type = models.IntegerField(choices=POST_TYPE_CHOICES, null=True)

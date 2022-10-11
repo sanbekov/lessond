@@ -1,4 +1,6 @@
 from django import forms
+from django.forms import ModelForm
+
 from posts.models import POST_TYPE_CHOICES
 
 
@@ -24,8 +26,6 @@ class Postform(forms.Form):
         choices=POST_TYPE_CHOICES
     )
 
-
-
 class Commentform(forms.Form):
     author = forms.CharField(
         label="Автор",
@@ -39,6 +39,5 @@ class Commentform(forms.Form):
         max_length=300,
         min_length=5
     )
-
 
 

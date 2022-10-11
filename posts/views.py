@@ -1,120 +1,101 @@
-from django.contrib.auth.models import User
-from django.shortcuts import render, redirect
-from django.http import HttpResponse
-from django.urls import reverse_lazy
-
-from posts.forms import Postform, Commentform
+from django.shortcuts import render, redirect, get_object_or_404
 from posts.models import Post, Comment
-from users.forms import RegisterForm, LoginForm
+from posts.forms import Postform, Commentform
+from posts.constants import PAGINATION_LiMIT
+from django.views.generic import ListView, CreateView, DetailView, UpdateView
 
 
 def get_user_from_request(request):
     return request.user if not request.user.is_anonymous else None
 
 
-def main(request):
-    if request.method == 'GET':
-        posts = Post.objects.all()
+class MainView(ListView):
+    queryset = Post.objects.all()
+    template_name = 'posts.html'
+    context_object_name = 'posts'
 
-        data = {
-            'posts': posts,
-            'user': get_user_from_request(request)
+    def get_context_data(self, *, object_list=None, **kwargs):
+        return {
+            'posts': self.queryset,
+            'user': get_user_from_request(self.request)
         }
 
-        return render(request, 'posts.html', context=data)
-
-
-def post_detail(request, id):
-    if request.method == 'GET':
-        post = Post.objects.get(id=id)
-        comments = Comment.objects.filter(post=post)
-
-        data = {
-            'user': get_user_from_request(request),
-            'comment_form': Commentform,
-            'post': post,
-            'comments': comments
-        }
-        return render(request, 'detail.html', context=data)
-    elif request.method == 'POST':
-        form = Commentform(request.POST)
-        if form.is_valid():
-            Comment.objects.create(
-                author=form.cleaned_data.get('author'),
-                text=form.cleaned_data.get('text'),
-                post_id=id
-            )
-            return redirect(f"/posts/{id}/")
+    def get(self, request, **kwargs):
+        page = int(request.GET.get('page', 1))
+        start_post = PAGINATION_LiMIT * page if page != 1 else 0
+        end_post = start_post + PAGINATION_LiMIT
+        max_page = len(self.queryset) / PAGINATION_LiMIT
+        if max_page > round(max_page):
+            max_page = round(max_page) + 1
         else:
-            post = Post.objects.get(id=id)
-            comments = Comment.objects.filter(post=post)
-            return render(request, 'detail.html', context={
-                'post': post,
-                'comments': comments,
-                'post_form': form,
-                'id': id
-            })
+            max_page = round(max_page)
+        context = {
+            'posts': self.queryset[start_post:end_post],
+            "user": get_user_from_request(self.request),
+            'pages': range(1, (self.queryset.__len__() // PAGINATION_LiMIT) + 1)
+        }
+        return render(request, self.template_name, context=context)
 
-def creat_post(request):
-    if request.method == 'GET':
+
+class PostDetailView(DetailView):
+    queryset = Post.objects.all()
+    context_object_name = 'post'
+    template_name = 'detail.html'
+
+
+class CreatePostView(ListView, CreateView):
+    model = Post
+    template_name = 'create_post.html'
+    form_class = Postform
+
+    def get(self, request, **kwargs):
         if get_user_from_request(request):
-            return render(request, 'create_post.html', context={
-                'post_form': Postform
+            return render(request, self.template_name, context={
+                'post_form': self.form_class,
             })
-        else:
-            return redirect('/')
+        return redirect('/')
 
-    if request.method == "POST":
-        form = Postform(request.POST)
+    def post(self, request, *args, **kwargs):
+        form = self.form_class(request.POST)
         if form.is_valid():
             Post.objects.create(
-                title=form.cleaned_data.get('title'),
-                desciption=form.cleaned_data.get('description'),
-                stars=form.cleaned_data.get('stars'),
-                type=form.cleaned_data.get('type')
+                title=form.cleaned_data.get("title"),
+                desciption=form.cleaned_data.get("desciption"),
+                stars=form.cleaned_data.get("stars"),
+                type=form.cleaned_data.get("type")
             )
             return redirect('/')
         else:
-            return render(request, 'create_post.html', context={
+            return render(request, self.template_name, context={
                 'post_form': form
             })
 
 
-def creat_comment(request):
-    if request.method == 'GET':
-        return render(request, 'create_comment.html', context={
-            'coment_form': Commentform
+class EditPostView(ListView, CreateView):
+    template_name = 'edit.html'
+    queryset = Post.objects.all()
+    form_class = Postform
+
+    def get(self, request, pk, *args):
+        return render(request, self.template_name, context={
+            'post_form': self.form_class,
+            'pk': pk
         })
 
-    if request.method == "POST":
-        form = Commentform(request.POST)
+    def post(self, request, pk, **kwargs):
+        form = self.form_class(request.POST)
+        instance = get_object_or_404(Post, pk=pk)
         if form.is_valid():
-            Post.objects.create(
-                author=form.cleaned_data.get('author'),
-                desciption=form.cleaned_data.get('description'),
-            )
+            instance.title = form.cleaned_data.get('title')
+            instance.description = form.cleaned_data.get('description')
+            instance.stars = form.cleaned_data.get('stars')
+            instance.type = form.cleaned_data.get('type')
+            instance.save()
             return redirect('/')
         else:
-            return render(request, 'create_post.html', context={
-                'post_form': form
+            return render(request, self.template_name, context={
+                'post_form': self.form_class,
+                'pk': pk
             })
-
-
-def edit_post(request, id):
-    if request.method == 'GET':
-        return render(request, 'create_post.html', context={
-            'post_form': Postform
-        })
-    if request.method == 'POST':
-        form = Postform(request.POST)
-        if form.is_valid():
-            post = Post.objects.get(id=id)
-            post.title = form.cleaned_data.get('title')
-            post.description = form.cleaned_data.get('description')
-            post.stars = form.cleaned_data.get('stars')
-            post.type = form.cleaned_data.get('type')
-            post.save()
-            return redirect('/')
-
 
 

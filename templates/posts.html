@@ -1,21 +1,34 @@
 {% extends 'main.html' %}
 
-{% block posts %}
-    <div style="display: flex; justify-content: space-between">
+{% block post %}
+    <div style="text-align: center; height: 40vh; width: 50vh;">
         {% for post in posts %}
-        <div style="text-align: center; height: 150px; width: 300px;">
-            <img src="media/{{ post.image }}" alt="" style="width: 300px">
-            {% if post.stars > 2 %}
-                <h3 style="color: green">{{ post.title }}</h3>
-            {% else %}
-                <h3 style="color: red">{{ post.title }}</h3>
-            {% endif %}
-            <h5>{{ post.description }}</h5>
-            <p>Stars: {{ post.stars }}</p>
-            <p>Type: {{ post.type }}</p>
-            <a href="/posts/{{ post.id }}/">More</a>
-            <div class="edit_post"><a href="posts/{{ post.id }}/edit"><button>Изменить пост</button></a></div>
-        </div>
-    {% endfor %}
+            <div style="display: grid; background-color: #f5dd5d; margin-bottom: 30px">
+                <img src="media/{{ post.image }}" style="width: 30vh">
+                {% if post.stars > 2 %}
+                    <h3 style="color: green">{{ post.title }}</h3>
+                {% else %}
+                    <h3 style="color: red">{{ post.title }}</h3>
+                {% endif %}
+                <h5>{{ post.description }}</h5>
+                <p>Stars: {{ post.stars }}</p>
+                <p>Type: {{ post.type }}</p>
+                <button style="background-color: #417690">
+                    <a href="posts/{{ post.id }}/detail/">
+                        <p>
+                            More
+                        </p>
+                    </a>
+                </button>
+                <div class="edit_post"><a href="posts/{{ post.id }}/edit"><button>Изменить пост</button></a></div>
+            </div>
+        {% endfor %}
+    </div>
+    <div class="pagination">
+        {% for page in pages %}
+            <a href="/?page={{ page }}">
+                <button style="margin-top: 425px;">{{ page }}</button>
+            </a>
+        {% endfor %}
     </div>
 {% endblock %}

@@ -1,0 +1,11 @@
+Сделать личный кабинет пользователя по url - /personal/
+вывести (username, first_name, last_name)
+
+там сделать форму изменения пароля PS: User.objects.set_password(), изменения пароля произайдет по url - /users/<int:user_id>/change_password/
+из  django.contrib.auth.decorators  import  login_required
+из  django.shortcuts  import  render
+
+@login_required
+def  my_protected_view ( request ):
+    """Представление, доступ к которому могут получить только зарегистрированные пользователи"""
+    return render  ( request , '  protected.html' ,  { 'current_user' :  request .user })
